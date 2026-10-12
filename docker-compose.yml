@@ -1,0 +1,20 @@
+services:
+  wa-notif:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wa-notif-service
+    restart: unless-stopped
+    ports:
+      - "3030:3030"
+    volumes:
+      # Mount config.json & SQLite session storage
+      - ./config.json:/app/config.json:ro
+      - ./storage:/app/storage
+    environment:
+      - TZ=Asia/Jakarta
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+          cpus: "0.5"

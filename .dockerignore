@@ -1,0 +1,9 @@
+.git
+bin/
+storage/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.idea
+.vscode

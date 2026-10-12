@@ -1,0 +1,18 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 3030
+  },
+  "auth": {
+    "bearer_token": "your-secret-bearer-token"
+  },
+  "whatsapp": {
+    "default_recipient": "6281234567890",
+    "session_db_path": "./storage/wa_session.db",
+    "device_name": "WA Notification Gateway",
+    "rate_limit_seconds": 1.5
+  },
+  "log": {
+    "level": "info"
+  }
+}
