@@ -12,7 +12,7 @@ name: wa-notif
 services:
   wa-notif:
     image: wa-notif:${WA_NOTIF_TAG:-latest}
-    container_name: wa-notif
+    container_name: wa-notif-service
     restart: unless-stopped
     environment:
       TZ: Asia/Jakarta
@@ -30,7 +30,11 @@ services:
     working_dir: /app
     ports:
       - "3030:3030"
-    networks: [default]
+    networks:
+      default:
+        aliases:
+          - wa-notif-service
+          - wa-notif
     deploy:
       resources:
         limits:
