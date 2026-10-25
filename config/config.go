@@ -33,6 +33,8 @@ type Config struct {
 	Log      LogConfig      `json:"log"`
 }
 
+// LoadConfig membaca konfigurasi dari path yang diberikan.
+// Urutan prioritas: argumen path → env CONFIG_PATH → "config.json" (fallback lokal).
 func LoadConfig(path string) (*Config, error) {
 	if path == "" {
 		if envPath := os.Getenv("CONFIG_PATH"); envPath != "" {

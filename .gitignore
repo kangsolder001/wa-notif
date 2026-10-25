@@ -4,3 +4,5 @@ storage/*.db-journal
 storage/*.db-wal
 storage/*.db-shm
 config.json
+deploy/.env
+

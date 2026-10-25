@@ -22,7 +22,7 @@ import (
 
 func main() {
 	// 1. Load Configuration
-	cfg, err := config.LoadConfig("config.json")
+	cfg, err := config.LoadConfig("")
 	if err != nil {
 		slog.Error("Failed to load configuration", "error", err)
 		os.Exit(1)

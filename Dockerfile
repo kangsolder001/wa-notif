@@ -1,37 +1,27 @@
 # syntax=docker/dockerfile:1
+# Image wa-notif untuk Raspberry Pi 4 (linux/arm64). Build silang tanpa emulasi:
+#   docker buildx build --platform linux/arm64 -t wa-notif:<tag> --load .
+# Tahap build berjalan di arsitektur mesin build; hanya biner statis yang disalin ke image akhir.
 
-# Stage 1: Build binary
-FROM golang:1.24-alpine AS builder
-
-WORKDIR /app
-
-# Enable auto toolchain download for Go 1.26+ requirement
-ENV GOTOOLCHAIN=auto
-
-RUN apk add --no-cache git ca-certificates tzdata
-
+FROM --platform=$BUILDPLATFORM golang:1.26-bookworm AS build
+ARG TARGETOS=linux
+ARG TARGETARCH=arm64
+ARG VERSION=dev
+WORKDIR /src
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
+COPY cmd ./cmd
+COPY config ./config
+COPY internal ./internal
+COPY pkg ./pkg
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
+    go build -trimpath -ldflags="-s -w -X main.version=${VERSION}" -o /out/wa-notif ./cmd/server/main.go
 
-COPY . .
-
-# Compile static binary without CGO (Pure Go SQLite via modernc.org/sqlite)
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/bin/wa-notif ./cmd/server/main.go
-
-# Stage 2: Minimal production runtime image
-FROM alpine:3.21
-
-RUN apk add --no-cache ca-certificates tzdata
-
-WORKDIR /app
-
-# Copy compiled binary and example config
-COPY --from=builder /app/bin/wa-notif /app/wa-notif
-COPY --from=builder /app/config.example.json /app/config.example.json
-
-# Default storage directory for session persistence
-RUN mkdir -p /app/storage
-
+# distroless static: tanpa shell/paket, pengguna nonroot = UID/GID 65532
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=build /out/wa-notif /usr/local/bin/wa-notif
+USER 65532:65532
 EXPOSE 3030
-
-ENTRYPOINT ["/app/wa-notif"]
+ENV CONFIG_PATH=/etc/wa-notif/config.json
+ENTRYPOINT ["/usr/local/bin/wa-notif"]

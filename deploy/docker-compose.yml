@@ -1,0 +1,40 @@
+# Deploy di Raspberry Pi: salin file ini ke /home/myrpi/docker/wa-notif/ bersama config.json
+# (konfigurasi + secret di bagian "auth.bearer_token"; lihat config.example.json). Container
+# membacanya sebagai UID 65532, dan sebaiknya file dibatasi aksesnya:
+#   chown myrpi:65532 config.json && chmod 640 config.json
+# lalu: docker compose up -d
+#
+# Akses: service wa-notif hanya mendengarkan di localhost Pi pada port 3030.
+# Service lain (mis. photo-annotated) bisa memanggil wa-notif via Docker network "wa-notif_default".
+# Image: docker buildx build --platform linux/arm64 -t wa-notif:<tag> --load .
+name: wa-notif
+
+services:
+  wa-notif:
+    image: wa-notif:${WA_NOTIF_TAG:-latest}
+    container_name: wa-notif
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Jakarta
+      CONFIG_PATH: /etc/wa-notif/config.json
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs:
+      # SQLite WAL butuh tmp writable; storage volume di bawah untuk data persisten
+      - /tmp
+    volumes:
+      - ./config.json:/etc/wa-notif/config.json:ro
+      # Persistent session SQLite (owner UID 65532)
+      - /mnt/ssd/wa-notif/storage:/app/storage
+    # hanya localhost Pi; service lain di network wa-notif_default
+    ports:
+      - "127.0.0.1:3030:3030"
+    networks: [default]
+    deploy:
+      resources:
+        limits:
+          memory: 100m
+          cpus: "0.5"
+    stop_grace_period: 10s
+

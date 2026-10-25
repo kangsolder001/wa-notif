@@ -1,3 +1,6 @@
+# docker-compose.yml ini untuk keperluan DEV / TEST LOKAL.
+# Untuk deploy di Raspberry Pi (myrpi), gunakan deploy/docker-compose.yml
+# yang sudah dikonfigurasi dengan network, volume SSD, dan security hardening.
 services:
   wa-notif:
     build:
@@ -9,10 +12,11 @@ services:
       - "3030:3030"
     volumes:
       # Mount config.json & SQLite session storage
-      - ./config.json:/app/config.json:ro
+      - ./config.json:/etc/wa-notif/config.json:ro
       - ./storage:/app/storage
     environment:
       - TZ=Asia/Jakarta
+      - CONFIG_PATH=/etc/wa-notif/config.json
     deploy:
       resources:
         limits:

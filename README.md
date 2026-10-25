@@ -30,7 +30,9 @@ wa-notif/
 │   └── server/
 │       └── main.go                  # Dependency Injection & Application Entrypoint
 ├── config/
-│   └── config.go                    # Config JSON Loader
+│   └── config.go                    # Config JSON Loader (env: CONFIG_PATH)
+├── deploy/
+│   └── docker-compose.yml           # Deploy di myrpi: /home/myrpi/docker/wa-notif/
 ├── internal/
 │   ├── domain/                      # Domain Layer (Core Business Rules)
 │   │   ├── entity/
@@ -56,11 +58,9 @@ wa-notif/
 ├── docs/
 │   ├── openapi.json                 # OpenAPI 3.0 Specification
 │   └── CURL_EXAMPLES.md            # Panduan cURL lengkap
-├── storage/                         # Persistent database files
-├── config.json                      # Konfigurasi aktif
+├── storage/                         # Persistent database files (gitignored)
 ├── config.example.json              # Contoh template konfigurasi
-├── Dockerfile                       # Multi-stage minimal container
-├── docker-compose.yml               # Deployment Compose file
+├── Dockerfile                       # Multi-stage build (linux/arm64)
 └── README.md
 ```
 
@@ -95,26 +95,70 @@ Konfigurasi disimpan dalam format JSON:
 
 ## 🐳 Cara Deploy dengan Docker Compose
 
-### 1. Sesuaikan Konfigurasi
-Edit file `config.json` dan ganti `bearer_token` serta `default_recipient`:
+### Deploy di Raspberry Pi (myrpi)
+
+File `deploy/docker-compose.yml` didesain untuk di-copy ke Pi dan langsung dijalankan.
+
+#### 1. Build image (dari mesin dev, cross-compile ke arm64)
 ```bash
+docker buildx build --platform linux/arm64 -t wa-notif:<tag> --load .
+# Simpan dan transfer ke Pi:
+docker save wa-notif:<tag> | ssh myrpi@192.168.1.222 "docker load"
+```
+
+#### 2. Siapkan folder di Pi
+```bash
+ssh myrpi@192.168.1.222
+sudo mkdir -p /mnt/ssd/wa-notif/storage
+sudo chown myrpi:65532 /mnt/ssd/wa-notif/storage
+mkdir -p ~/docker/wa-notif
+```
+
+#### 3. Salin file deploy ke Pi
+```bash
+# Dari mesin dev:
+scp deploy/docker-compose.yml myrpi@192.168.1.222:~/docker/wa-notif/
+scp config.example.json myrpi@192.168.1.222:~/docker/wa-notif/config.json
+```
+
+#### 4. Edit konfigurasi di Pi
+```bash
+ssh myrpi@192.168.1.222
+nano ~/docker/wa-notif/config.json   # isi bearer_token & default_recipient
+chown myrpi:65532 ~/docker/wa-notif/config.json && chmod 640 ~/docker/wa-notif/config.json
+```
+
+#### 5. Jalankan
+```bash
+cd ~/docker/wa-notif
+docker compose up -d
+```
+
+#### 6. Pairing Perangkat WhatsApp
+Buka browser dan akses Web UI:
+```text
+http://<IP_RASPBERRY_PI>:3030/login
+```
+Scan QR code yang muncul menggunakan WhatsApp di HP (**Perangkat Tertaut** > **Tautkan Perangkat**).
+
+---
+
+### Deploy Lokal (Dev / Test)
+
+#### 1. Sesuaikan Konfigurasi
+Salin dan edit `config.example.json` → `config.json`:
+```bash
+cp config.example.json config.json
 nano config.json
 ```
 
-### 2. Jalankan Container
+#### 2. Jalankan dengan docker-compose lama (root)
 ```bash
+# Untuk dev lokal, kamu juga bisa pakai docker-compose.yml yang sudah ada di root
 docker compose up -d --build
 ```
 
-### 3. Pairing Perangkat WhatsApp
-Buka browser dan akses Web UI:
-```text
-http://<IP_RASPBERRY_PI_ATAU_SERVER>:3030/login
-```
-Scan QR code yang muncul menggunakan WhatsApp di HP Anda (**Perangkat Tertaut** > **Tautkan Perangkat**).
-Status otomatis berubah menjadi **TERHUBUNG**.
-
-### 4. Cek Logs Container (Opsional)
+#### 3. Cek Logs
 ```bash
 docker compose logs -f
 ```

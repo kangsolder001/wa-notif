@@ -7,3 +7,6 @@ storage/
 *.db-shm
 .idea
 .vscode
+deploy/
+config.json
+docs/
