@@ -27,9 +27,9 @@ services:
       - ./config.json:/etc/wa-notif/config.json:ro
       # Persistent session SQLite (owner UID 65532)
       - /mnt/ssd/wa-notif/storage:/app/storage
-    # hanya localhost Pi; service lain di network wa-notif_default
+    working_dir: /app
     ports:
-      - "127.0.0.1:3030:3030"
+      - "3030:3030"
     networks: [default]
     deploy:
       resources:
