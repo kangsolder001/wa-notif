@@ -6,3 +6,4 @@ storage/*.db-shm
 config.json
 deploy/.env
 storage/images/
+deploy/rpi.md
