@@ -35,9 +35,10 @@ type WhatsmeowAdapter struct {
 	lastSent  time.Time
 	rateLimit time.Duration
 	logger    waLog.Logger
+	images    *imageCollector
 }
 
-func NewWhatsmeowAdapter(dbPath string, rateLimitSeconds float64, logLevel string) (*WhatsmeowAdapter, error) {
+func NewWhatsmeowAdapter(dbPath string, rateLimitSeconds float64, logLevel string, imageSaveDir string, imageAllowedSenders []string) (*WhatsmeowAdapter, error) {
 	// Ensure directory exists
 	dir := filepath.Dir(dbPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -73,6 +74,7 @@ func NewWhatsmeowAdapter(dbPath string, rateLimitSeconds float64, logLevel strin
 		status:    entity.StatusDisconnected,
 		rateLimit: time.Duration(rateLimitSeconds * float64(time.Second)),
 		logger:    wlog,
+		images:    newImageCollector(imageSaveDir, imageAllowedSenders),
 	}
 
 	client.AddEventHandler(adapter.handleEvent)
@@ -82,6 +84,9 @@ func NewWhatsmeowAdapter(dbPath string, rateLimitSeconds float64, logLevel strin
 
 func (a *WhatsmeowAdapter) handleEvent(evt interface{}) {
 	switch v := evt.(type) {
+	case *events.Message:
+		a.handleIncomingMessage(v)
+
 	case *events.Connected:
 		a.qrMu.Lock()
 		a.status = entity.StatusConnected

@@ -10,7 +10,9 @@
     "default_recipient": "6281234567890",
     "session_db_path": "./storage/wa_session.db",
     "device_name": "WA Notification Gateway",
-    "rate_limit_seconds": 1.5
+    "rate_limit_seconds": 1.5,
+    "image_save_dir": "./storage/images",
+    "image_allowed_senders": ["6281234567890"]
   },
   "log": {
     "level": "info"

@@ -41,6 +41,8 @@ func main() {
 		cfg.WhatsApp.SessionDBPath,
 		cfg.WhatsApp.RateLimitSeconds,
 		cfg.Log.Level,
+		cfg.WhatsApp.ImageSaveDir,
+		cfg.WhatsApp.ImageAllowedSenders,
 	)
 	if err != nil {
 		log.Error("Failed to initialize WhatsApp adapter", "error", err)

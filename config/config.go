@@ -20,6 +20,9 @@ type WhatsAppConfig struct {
 	SessionDBPath    string  `json:"session_db_path"`
 	DeviceName       string  `json:"device_name"`
 	RateLimitSeconds float64 `json:"rate_limit_seconds"`
+	ImageSaveDir     string  `json:"image_save_dir"`
+	// ImageAllowedSenders: phone numbers allowed to use /savegambar; empty = anyone.
+	ImageAllowedSenders []string `json:"image_allowed_senders"`
 }
 
 type LogConfig struct {
@@ -73,6 +76,9 @@ func LoadConfig(path string) (*Config, error) {
 	}
 	if cfg.WhatsApp.SessionDBPath == "" {
 		cfg.WhatsApp.SessionDBPath = "./storage/wa_session.db"
+	}
+	if cfg.WhatsApp.ImageSaveDir == "" {
+		cfg.WhatsApp.ImageSaveDir = "./storage/images"
 	}
 	if cfg.WhatsApp.RateLimitSeconds <= 0 {
 		cfg.WhatsApp.RateLimitSeconds = 1.0
