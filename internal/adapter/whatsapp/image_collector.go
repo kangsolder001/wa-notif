@@ -15,11 +15,17 @@ import (
 )
 
 const (
-	cmdStartSave = "/savegambar"
-	cmdStopSave  = "/gambarselesai"
+	cmdHelp      = "/help"
+	cmdStartSave = "/saveimage"
+	cmdStopSave  = "/saveimagedone"
 )
 
-// imageCollector saves incoming images per sender between /savegambar and /gambarselesai.
+const helpText = "Perintah yang tersedia:\n" +
+	cmdHelp + " - tampilkan daftar perintah\n" +
+	cmdStartSave + " - mulai mode simpan gambar\n" +
+	cmdStopSave + " - selesai simpan gambar"
+
+// imageCollector saves incoming images per sender between /saveimage and /saveimagedone.
 type imageCollector struct {
 	dir     string
 	allowed map[string]bool // empty = any sender allowed
@@ -35,7 +41,7 @@ func newImageCollector(dir string, allowedSenders []string) *imageCollector {
 	return &imageCollector{dir: dir, allowed: allowed, active: make(map[string]int)}
 }
 
-// normalizeCommand turns "/Gambar Selesai" into "/gambarselesai".
+// normalizeCommand turns "/Save Image Done" into "/saveimagedone".
 func normalizeCommand(text string) string {
 	return strings.ToLower(strings.Join(strings.Fields(text), ""))
 }
@@ -70,11 +76,14 @@ func (a *WhatsmeowAdapter) handleIncomingMessage(v *events.Message) {
 	}
 
 	switch normalizeCommand(text) {
+	case cmdHelp:
+		a.reply(v, helpText)
+		return
 	case cmdStartSave:
 		c.mu.Lock()
 		c.active[sender] = 0
 		c.mu.Unlock()
-		a.reply(v, "Mode simpan gambar aktif. Kirim gambar sekarang, lalu ketik /gambarselesai jika sudah.")
+		a.reply(v, "Mode simpan gambar aktif. Kirim gambar sekarang, lalu ketik "+cmdStopSave+" jika sudah.")
 		return
 	case cmdStopSave:
 		c.mu.Lock()
@@ -82,7 +91,7 @@ func (a *WhatsmeowAdapter) handleIncomingMessage(v *events.Message) {
 		delete(c.active, sender)
 		c.mu.Unlock()
 		if !ok {
-			a.reply(v, "Mode simpan gambar belum aktif. Ketik /savegambar untuk mulai.")
+			a.reply(v, "Mode simpan gambar belum aktif. Ketik "+cmdStartSave+" untuk mulai.")
 			return
 		}
 		a.reply(v, fmt.Sprintf("Selesai. %d gambar tersimpan.", n))

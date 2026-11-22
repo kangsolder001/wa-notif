@@ -21,7 +21,7 @@ type WhatsAppConfig struct {
 	DeviceName       string  `json:"device_name"`
 	RateLimitSeconds float64 `json:"rate_limit_seconds"`
 	ImageSaveDir     string  `json:"image_save_dir"`
-	// ImageAllowedSenders: phone numbers allowed to use /savegambar; empty = anyone.
+	// ImageAllowedSenders: phone numbers allowed to use the bot commands; empty = anyone.
 	ImageAllowedSenders []string `json:"image_allowed_senders"`
 }
 

@@ -4,11 +4,12 @@ import "testing"
 
 func TestNormalizeCommand(t *testing.T) {
 	cases := map[string]string{
-		"/savegambar":      cmdStartSave,
-		" /SaveGambar ":    cmdStartSave,
-		"/gambar selesai":  cmdStopSave,
-		"/Gambar  Selesai": cmdStopSave,
-		"/gambarselesai":   cmdStopSave,
+		"/help":            cmdHelp,
+		"/saveimage":       cmdStartSave,
+		" /SaveImage ":     cmdStartSave,
+		"/save image done": cmdStopSave,
+		"/SaveImage  Done": cmdStopSave,
+		"/saveimagedone":   cmdStopSave,
 	}
 	for in, want := range cases {
 		if got := normalizeCommand(in); got != want {
